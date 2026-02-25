@@ -2,6 +2,7 @@ import { Command } from "commander";
 import { loadConfig, clearConfig } from "./lib/config";
 import { ApiClient } from "./lib/client";
 import { error, success } from "./lib/output";
+import { version as pkgVersion } from "../package.json";
 import { loginCommand } from "./commands/login";
 import {
   getCommand,
@@ -37,7 +38,7 @@ const program = new Command();
 program
   .name("jsondb")
   .description("The jsondb.cloud CLI — manage your JSON database from the terminal")
-  .version("1.0.0")
+  .version(pkgVersion)
   .option("--api-key <key>", "Use a specific API key")
   .option("--project <ns>", 'Target project (default: "default")')
   .option("--base-url <url>", "API base URL")
