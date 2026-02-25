@@ -27,7 +27,12 @@ export class ApiClient {
     };
   }
 
-  private async request(method: string, url: string, headers: Record<string, string>, body?: string): Promise<Response> {
+  private async request(
+    method: string,
+    url: string,
+    headers: Record<string, string>,
+    body?: string,
+  ): Promise<Response> {
     this.log(`${method} ${url}`);
     const res = await fetch(url, { method, headers, body });
     this.log(`${res.status} ${res.statusText}`);
@@ -40,14 +45,24 @@ export class ApiClient {
   }
 
   async post(path: string, body?: unknown, extraHeaders?: Record<string, string>): Promise<Response> {
-    return this.request("POST", this.url(path), this.headers(extraHeaders), body !== undefined ? JSON.stringify(body) : undefined);
+    return this.request(
+      "POST",
+      this.url(path),
+      this.headers(extraHeaders),
+      body !== undefined ? JSON.stringify(body) : undefined,
+    );
   }
 
   async postRaw(path: string, body: string, contentType: string): Promise<Response> {
-    return this.request("POST", this.url(path), {
-      Authorization: `Bearer ${this.config.apiKey}`,
-      "Content-Type": contentType,
-    }, body);
+    return this.request(
+      "POST",
+      this.url(path),
+      {
+        Authorization: `Bearer ${this.config.apiKey}`,
+        "Content-Type": contentType,
+      },
+      body,
+    );
   }
 
   async put(path: string, body: unknown): Promise<Response> {
@@ -55,7 +70,12 @@ export class ApiClient {
   }
 
   async patch(path: string, body: unknown, contentType?: string): Promise<Response> {
-    return this.request("PATCH", this.url(path), this.headers(contentType ? { "Content-Type": contentType } : undefined), JSON.stringify(body));
+    return this.request(
+      "PATCH",
+      this.url(path),
+      this.headers(contentType ? { "Content-Type": contentType } : undefined),
+      JSON.stringify(body),
+    );
   }
 
   async delete(path: string): Promise<Response> {
