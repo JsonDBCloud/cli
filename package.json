@@ -1,0 +1,31 @@
+{
+  "name": "@jsondb-cloud/cli",
+  "version": "1.0.0",
+  "description": "CLI tool for jsondb.cloud — push, pull, manage your JSON database from the terminal",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "bin": {
+    "jsondb": "./bin/jsondb.js"
+  },
+  "files": ["dist", "bin"],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "commander": "^13.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "@types/node": "^20.0.0"
+  },
+  "keywords": ["jsondb", "cli", "json", "database", "api", "rest"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jsondb-cloud/cli"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
