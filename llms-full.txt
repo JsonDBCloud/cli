@@ -1,0 +1,1174 @@
+# @jsondb-cloud/cli - Complete LLM Reference
+
+> The official CLI for jsondb.cloud — a hosted JSON document database.
+
+jsondb.cloud is a cloud-hosted JSON document database. The CLI provides full
+CRUD operations, import/export, schema management, versioning, webhooks, and
+bulk operations from the terminal or CI pipelines.
+
+Requires: Node.js >= 18
+
+Package: @jsondb-cloud/cli
+Binary name: jsondb
+Repository: https://github.com/JsonDBCloud/cli
+License: MIT
+
+---
+
+## Installation
+
+### npm (recommended)
+
+    npm install -g @jsondb-cloud/cli
+
+### Homebrew (macOS/Linux)
+
+    brew install jsondbcloud/tap/jsondb
+
+### Standalone binaries
+
+Download from https://github.com/JsonDBCloud/cli/releases
+
+Platforms:
+- macOS arm64 (Apple Silicon)
+- macOS x64 (Intel)
+- Linux x64
+- Linux arm64
+
+### Verify installation
+
+    jsondb --version
+
+---
+
+## Configuration
+
+### Credentials file
+
+Location: ~/.config/jsondb/credentials.json
+Permissions: 0o600 (read/write owner only)
+
+Format:
+    {
+      "apiKey": "jdb_sk_live_...",
+      "project": "default",
+      "baseUrl": "https://api.jsondb.cloud"
+    }
+
+Created by `jsondb login`. Removed by `jsondb logout`.
+
+### Environment variables
+
+    JSONDB_API_KEY     API key (overrides credentials file)
+    JSONDB_PROJECT     Project name (default if env set: "v1")
+    JSONDB_NAMESPACE   Legacy alias for JSONDB_PROJECT
+    JSONDB_BASE_URL    API base URL (default: "https://api.jsondb.cloud")
+
+When JSONDB_API_KEY is set, all config is read from env vars only; the
+credentials file is not read.
+
+### Global flags
+
+These flags apply to every command and override both env vars and config file:
+
+    --api-key <key>    Use a specific API key
+    --project <ns>     Target project (default: "default")
+    --base-url <url>   API base URL
+    --format <fmt>     Output format: json, raw, ndjson, table
+
+### Precedence order (highest to lowest)
+
+1. CLI flags (--api-key, --project, --base-url)
+2. Environment variables (JSONDB_API_KEY, JSONDB_PROJECT, JSONDB_BASE_URL)
+3. Credentials file (~/.config/jsondb/credentials.json)
+4. Built-in defaults (project: "default", baseUrl: "https://api.jsondb.cloud")
+
+### API URL construction
+
+All API requests go to: {baseUrl}/{project}/{path}
+Example: https://api.jsondb.cloud/default/users/usr_abc123
+
+Authentication: Bearer token in Authorization header.
+
+---
+
+## Auth Commands
+
+### login
+
+Authenticate with jsondb.cloud and save credentials.
+
+    jsondb login [--api-key <key>] [--project <ns>] [--base-url <url>]
+
+Flags:
+    --api-key <key>   API key (skips interactive prompt)
+    --project <ns>    Default project (default: "default")
+    --base-url <url>  API base URL (default: "https://api.jsondb.cloud")
+
+Behavior:
+- Without --api-key: prompts interactively "? Enter your API key: "
+- Validates key starts with "jdb_sk_" prefix
+- On invalid key: prints error with suggestion about jdb_sk_live_ or jdb_sk_test_ prefix
+- Saves to ~/.config/jsondb/credentials.json with mode 0o600
+- Creates ~/.config/jsondb/ directory if it does not exist
+
+Output on success:
+    OK: Authenticated successfully
+      Project: default
+      Key stored in /home/user/.config/jsondb/credentials.json
+
+### logout
+
+Remove stored credentials.
+
+    jsondb logout
+
+Behavior:
+- Deletes ~/.config/jsondb/credentials.json
+- Silently succeeds if file does not exist
+
+Output:
+    OK: Logged out. Credentials removed.
+
+### whoami
+
+Show current configuration.
+
+    jsondb whoami
+
+Behavior:
+- Reads config (env vars or credentials file)
+- If not authenticated: prints error and exits 1
+
+Output:
+      API Key: jdb_sk_live_abcd...wxyz
+      Project: default
+      Base URL: https://api.jsondb.cloud
+
+The API key is masked: first 16 characters + "..." + last 4 characters.
+
+---
+
+## Document CRUD
+
+Document paths use the format: {collection}/{documentId}
+Example: users/usr_abc123
+
+### get
+
+Read a single document.
+
+    jsondb get <path> [--format json|raw]
+
+Arguments:
+    path    Document path (collection/documentId)
+
+Flags:
+    --format <fmt>  "json" (default, pretty-printed) or "raw" (compact)
+
+Example:
+    jsondb get users/usr_abc123
+
+Output: The full document JSON.
+
+    {
+      "_id": "usr_abc123",
+      "name": "Alice",
+      "email": "alice@example.com"
+    }
+
+With --format raw:
+    {"_id":"usr_abc123","name":"Alice","email":"alice@example.com"}
+
+Error: prints error message and exits 1.
+
+### create
+
+Create a new document in a collection.
+
+    jsondb create <collection> [--file <file>] [--id <id>]
+
+Arguments:
+    collection   Target collection name
+
+Flags:
+    --file <file>   Read document JSON from file (otherwise reads stdin)
+    --id <id>       Explicit document ID (otherwise server-generated)
+
+Input: JSON object (from file or stdin).
+
+Behavior:
+- With --id: POSTs to {collection}/{id}
+- Without --id: POSTs to {collection} (server assigns ID)
+- Reads file synchronously or stdin via async iteration
+
+Examples:
+    jsondb create users --file user.json --id usr_custom_001
+
+    echo '{"name":"Bob"}' | jsondb create users
+
+Output:
+    OK: Created usr_abc123 in users
+
+Error on non-JSON input: JSON parse error.
+
+### update
+
+Full replacement of a document (PUT).
+
+    jsondb update <path> [--file <file>]
+
+Arguments:
+    path   Document path (collection/documentId)
+
+Flags:
+    --file <file>   Read document JSON from file (otherwise reads stdin)
+
+Behavior:
+- Uses HTTP PUT — replaces the entire document
+- Input must be a complete JSON object
+
+Example:
+    jsondb update users/usr_abc123 --file updated-user.json
+
+Output:
+    OK: Updated usr_abc123
+
+### patch
+
+Partial update of a document (PATCH).
+
+    jsondb patch <path> [--file <file>]
+
+Arguments:
+    path   Document path (collection/documentId)
+
+Flags:
+    --file <file>   Read patch JSON from file (otherwise reads stdin)
+
+Behavior:
+- Uses HTTP PATCH — merges fields into the existing document
+- Only specified fields are changed; unspecified fields remain
+
+Example:
+    echo '{"email":"new@example.com"}' | jsondb patch users/usr_abc123
+
+Output:
+    OK: Patched usr_abc123
+
+### delete
+
+Delete a document.
+
+    jsondb delete <path>
+
+Arguments:
+    path   Document path (collection/documentId)
+
+Behavior:
+- Uses HTTP DELETE
+- Treats HTTP 204 as success (no content)
+
+Example:
+    jsondb delete users/usr_abc123
+
+Output:
+    OK: Deleted users/usr_abc123
+
+---
+
+## Collection Commands
+
+### collections
+
+List all collection names in the project.
+
+    jsondb collections
+
+Behavior:
+- Fetches up to 100 documents from the project root
+- Extracts unique $collection field values
+- Sorts alphabetically
+- Prints one collection name per line
+
+Output:
+    orders
+    products
+    users
+
+### documents
+
+List documents in a collection.
+
+    jsondb documents <collection> [--limit <n>] [--format json|raw]
+
+Arguments:
+    collection   Collection name
+
+Flags:
+    --limit <n>     Max documents to return (default: "20")
+    --format <fmt>  "json" (pretty) or "raw" (compact)
+
+Behavior:
+- GETs {collection}?limit={n}
+- Returns the full API response (typically includes data array and metadata)
+
+Example:
+    jsondb documents users --limit 5
+
+Output: JSON array/object of documents.
+
+---
+
+## Import / Export
+
+### push
+
+Import documents from a local file into a collection.
+
+    jsondb push <file> --to <collection> [--on-conflict fail|skip|overwrite]
+
+Arguments:
+    file   Local file path (.json, .csv, or .ndjson)
+
+Flags (required):
+    --to <collection>           Target collection name
+
+Flags (optional):
+    --on-conflict <strategy>    Conflict resolution: fail, skip, overwrite
+                                Default: "fail"
+
+Behavior:
+- File must exist (checked before upload)
+- Content-Type detected from file extension:
+    .json   -> application/json
+    .csv    -> text/csv
+    .ndjson -> application/x-ndjson
+- Posts raw file content to {collection}/_import?onConflict={strategy}
+- In TTY mode, prints "Importing to {collection}..." before upload
+
+Success output:
+    OK: Imported 50 documents (48 created, 0 skipped, 2 failed, 0 overwritten)
+
+If errors exist, shows first 10:
+    WARN: 2 errors:
+      - Index 3: Duplicate key error
+      - Index 17: Validation failed
+      ... and 0 more
+
+Response shape from API:
+    {
+      "summary": {
+        "total": 50,
+        "created": 48,
+        "skipped": 0,
+        "failed": 2,
+        "overwritten": 0
+      },
+      "errors": [
+        { "index": 3, "error": { "message": "Duplicate key error" } }
+      ]
+    }
+
+Example:
+    jsondb push ./data/users.json --to users
+    jsondb push ./data/products.csv --to products --on-conflict skip
+    jsondb push ./logs.ndjson --to logs --on-conflict overwrite
+
+### pull
+
+Export documents from a collection.
+
+    jsondb pull <collection> [--out <file>] [--format json|csv|ndjson] [--filter <field=value>]
+
+Arguments:
+    collection   Collection to export
+
+Flags:
+    --out <file>        Write to file (otherwise stdout)
+    --format <fmt>      Export format: json (default), csv, ndjson
+    --filter <expr>     Filter expression as field=value
+
+Behavior:
+- GETs {collection}/_export with Accept header based on format:
+    json   -> application/json
+    csv    -> text/csv
+    ndjson -> application/x-ndjson
+- Filter is parsed as "field=value" and sent as ?filter[field]=value
+- Only one filter expression is supported
+- With --out: writes content to file and prints document count
+- Without --out: writes content directly to stdout
+
+Output with --out:
+    OK: Exported 25 documents to users.json
+
+Document count calculation:
+- json: parses and reads array length
+- ndjson: counts non-empty lines
+- csv: counts non-empty lines minus 1 (header row)
+
+Examples:
+    jsondb pull users --out users.json
+    jsondb pull users --format csv --out users.csv
+    jsondb pull orders --filter status=pending --format ndjson
+    jsondb pull users | jq '.[].name'
+
+---
+
+## Schema Management
+
+### schema get
+
+Retrieve the JSON schema for a collection.
+
+    jsondb schema get <collection>
+
+Behavior:
+- GETs {collection}/_schema
+- On 404: prints "No schema set for collection '{collection}'" (not an error, exits 0)
+- Prints the schema JSON (extracts .schema field if present, otherwise full response)
+
+Example:
+    jsondb schema get users
+
+Output:
+    {
+      "type": "object",
+      "required": ["name", "email"],
+      "properties": {
+        "name": { "type": "string" },
+        "email": { "type": "string", "format": "email" }
+      }
+    }
+
+### schema set
+
+Set or replace the schema for a collection.
+
+    jsondb schema set <collection> [--file <file>]
+
+Flags:
+    --file <file>   Schema JSON file (otherwise reads stdin)
+
+Behavior:
+- Uses HTTP PUT to {collection}/_schema
+- Reads JSON schema from file or stdin
+- Replaces any existing schema
+
+Examples:
+    jsondb schema set users --file user-schema.json
+    cat schema.json | jsondb schema set users
+
+Output:
+    OK: Schema set for collection 'users'
+
+### schema remove
+
+Remove the schema from a collection.
+
+    jsondb schema remove <collection>
+
+Behavior:
+- Uses HTTP DELETE on {collection}/_schema
+- Documents are no longer validated after removal
+
+Example:
+    jsondb schema remove users
+
+Output:
+    OK: Schema removed from collection 'users'
+
+---
+
+## Version History
+
+### versions list
+
+List all versions of a document.
+
+    jsondb versions list <collection> <id>
+
+Arguments:
+    collection   Collection name
+    id           Document ID
+
+Behavior:
+- GETs {collection}/{id}/versions
+- Displays a table with columns: Version, Action, Timestamp, Size
+- Parses response from .versions, .data, or root array
+
+Output:
+    Version  Action   Timestamp             Size
+    -------  ------   ---------             ----
+    1        created  2025-01-15T10:30:00Z  245
+    2        updated  2025-01-16T14:20:00Z  312
+    3        updated  2025-01-17T09:00:00Z  298
+
+If no versions: "No versions found."
+
+### versions get
+
+Retrieve a document at a specific version.
+
+    jsondb versions get <collection> <id> <version>
+
+Arguments:
+    collection   Collection name
+    id           Document ID
+    version      Version number
+
+Behavior:
+- GETs {collection}/{id}/versions/{version}
+- Returns the full document as it existed at that version
+
+Example:
+    jsondb versions get users usr_abc123 2
+
+Output: JSON document at that version.
+
+### versions diff
+
+Show differences between two versions.
+
+    jsondb versions diff <collection> <id> --from <n> --to <n>
+
+Arguments:
+    collection   Collection name
+    id           Document ID
+
+Flags (both required):
+    --from <version>   Starting version number
+    --to <version>     Ending version number
+
+Behavior:
+- Both --from and --to are required (enforced by commander requiredOption)
+- GETs {collection}/{id}/versions/diff?from={n}&to={n}
+- Returns a JSON diff object
+
+Example:
+    jsondb versions diff users usr_abc123 --from 1 --to 3
+
+Output: JSON diff (format depends on server implementation).
+
+### versions restore
+
+Restore a document to a previous version.
+
+    jsondb versions restore <collection> <id> <version>
+
+Arguments:
+    collection   Collection name
+    id           Document ID
+    version      Version number to restore to
+
+Behavior:
+- POSTs to {collection}/{id}/versions/{version}/restore
+- Creates a new version with the restored content
+- Prints success message and the restored document
+
+Example:
+    jsondb versions restore users usr_abc123 2
+
+Output:
+    OK: Restored usr_abc123 to version 2
+    {
+      "_id": "usr_abc123",
+      "name": "Alice",
+      "email": "alice@old-email.com"
+    }
+
+---
+
+## Webhooks
+
+### webhooks list
+
+List webhooks for a collection.
+
+    jsondb webhooks list <collection>
+
+Behavior:
+- GETs {collection}/_webhooks
+- Displays table: ID, URL, Events, Status
+- Events are displayed comma-separated
+
+Output:
+    ID          URL                              Events                    Status
+    --          ---                              ------                    ------
+    wh_abc123   https://example.com/hook         document.created          active
+    wh_def456   https://example.com/all-events   document.created, document.updated  active
+
+If no webhooks: "No webhooks found."
+
+### webhooks create
+
+Create a new webhook.
+
+    jsondb webhooks create <collection> --url <url> --events <events> [--description <desc>] [--secret <secret>]
+
+Arguments:
+    collection   Collection name
+
+Flags (required):
+    --url <url>         Webhook endpoint URL
+    --events <events>   Comma-separated event types
+
+Flags (optional):
+    --description <desc>   Human-readable description
+    --secret <secret>      HMAC signing secret for payload verification
+
+Valid event types:
+    document.created
+    document.updated
+    document.deleted
+
+Behavior:
+- Events string is split by comma and trimmed
+- POSTs to {collection}/_webhooks
+- Returns the created webhook object
+
+Example:
+    jsondb webhooks create orders \
+      --url https://example.com/webhook \
+      --events document.created,document.updated \
+      --description "Order notifications" \
+      --secret my_webhook_secret_123
+
+Output:
+    OK: Created webhook wh_abc123
+    {
+      "_id": "wh_abc123",
+      "url": "https://example.com/webhook",
+      "events": ["document.created", "document.updated"],
+      "description": "Order notifications",
+      "status": "active"
+    }
+
+### webhooks get
+
+Get webhook details and recent deliveries.
+
+    jsondb webhooks get <collection> <id>
+
+Arguments:
+    collection   Collection name
+    id           Webhook ID
+
+Example:
+    jsondb webhooks get orders wh_abc123
+
+Output: Full webhook JSON including delivery history.
+
+### webhooks update
+
+Update an existing webhook.
+
+    jsondb webhooks update <collection> <id> [--url <url>] [--events <events>] [--description <desc>] [--status active|disabled]
+
+Arguments:
+    collection   Collection name
+    id           Webhook ID
+
+Flags (all optional, but at least one required):
+    --url <url>            New endpoint URL
+    --events <events>      New comma-separated events
+    --description <desc>   New description
+    --status <status>      "active" or "disabled"
+
+Behavior:
+- Only provided fields are sent in the update (HTTP PUT)
+- If no flags provided: prints error and exits 1
+- Events string is split by comma and trimmed
+
+Example:
+    jsondb webhooks update orders wh_abc123 --status disabled
+    jsondb webhooks update orders wh_abc123 --url https://new-url.com --events document.deleted
+
+Output:
+    OK: Updated webhook wh_abc123
+    { ... updated webhook JSON ... }
+
+### webhooks delete
+
+Delete a webhook.
+
+    jsondb webhooks delete <collection> <id>
+
+Behavior:
+- HTTP DELETE on {collection}/_webhooks/{id}
+- HTTP 204 treated as success
+
+Example:
+    jsondb webhooks delete orders wh_abc123
+
+Output:
+    OK: Deleted webhook wh_abc123
+
+### webhooks test
+
+Send a test event to a webhook.
+
+    jsondb webhooks test <collection> <id>
+
+Behavior:
+- POSTs to {collection}/_webhooks/{id}/test
+- Returns the test delivery result
+
+Example:
+    jsondb webhooks test orders wh_abc123
+
+Output:
+    OK: Test event sent for webhook wh_abc123
+    {
+      "statusCode": 200,
+      "duration": 142,
+      "success": true
+    }
+
+---
+
+## Utilities
+
+### validate
+
+Dry-run schema validation against a document.
+
+    jsondb validate <collection> [--file <file>]
+
+Arguments:
+    collection   Collection name (must have a schema set)
+
+Flags:
+    --file <file>   Document JSON file (otherwise reads stdin synchronously)
+
+Behavior:
+- POSTs document to {collection}/_validate
+- Does NOT create the document — validation only
+- On HTTP 422: prints "Validation failed" + error details, exits 1
+- On success: prints "Document is valid" + response
+
+Examples:
+    jsondb validate users --file user.json
+    echo '{"name":"Bob"}' | jsondb validate users
+
+Success output:
+    OK: Document is valid
+    { "valid": true }
+
+Failure output (exit code 1):
+    ERROR: Validation failed
+    {
+      "error": {
+        "message": "Validation failed",
+        "details": [
+          { "field": "email", "message": "required field missing" }
+        ]
+      }
+    }
+
+### count
+
+Count documents in a collection, optionally filtered.
+
+    jsondb count <collection> [--filter <expr...>]
+
+Arguments:
+    collection   Collection name
+
+Flags:
+    --filter <expr...>   One or more filter expressions (field=value)
+                         Multiple --filter flags allowed (variadic)
+
+Behavior:
+- GETs {collection}?count=true with filter query params
+- Filters are appended as &filter[field]=value
+- Supports operator syntax: field[op]=value (e.g., status[ne]=deleted)
+- Invalid filters (no = sign): prints error and exits 1
+- Extracts count from .count, .meta.total, or raw response
+
+Examples:
+    jsondb count users
+    jsondb count orders --filter status=pending
+    jsondb count orders --filter status=pending --filter total[gte]=100
+
+Output: A single number on stdout.
+    42
+
+### bulk
+
+Execute bulk operations from a JSON array.
+
+    jsondb bulk <collection> [--file <file>]
+
+Arguments:
+    collection   Collection name
+
+Flags:
+    --file <file>   Operations JSON file (otherwise reads stdin synchronously)
+
+Behavior:
+- Input must be a JSON array of operation objects
+- If input is not an array: prints "Bulk operations must be a JSON array" and exits 1
+- POSTs to {collection}/_bulk
+- Returns the bulk operation results
+
+Example input (operations array):
+    [
+      { "op": "create", "data": { "name": "Alice" } },
+      { "op": "update", "id": "usr_abc123", "data": { "name": "Alice Updated" } },
+      { "op": "delete", "id": "usr_old001" }
+    ]
+
+Example:
+    jsondb bulk users --file operations.json
+    cat ops.json | jsondb bulk users
+
+Output:
+    OK: Bulk operation completed
+    {
+      "results": [
+        { "op": "create", "success": true, "_id": "usr_new001" },
+        { "op": "update", "success": true, "_id": "usr_abc123" },
+        { "op": "delete", "success": true, "_id": "usr_old001" }
+      ]
+    }
+
+---
+
+## API Key Management
+
+### keys list
+
+List API keys for the account.
+
+    jsondb keys list
+
+Behavior:
+- GETs /api/keys (raw path, not project-scoped)
+- Displays table: NAME, HINT, SCOPE, PROJECT, STATUS, CREATED
+- Hint is displayed as "...{last4chars}"
+
+Output:
+    NAME           HINT         SCOPE       PROJECT   STATUS  CREATED
+    ----           ----         -----       -------   ------  -------
+    Production     ...a1b2      read-write  default   active  1/15/2025
+    Read-only      ...c3d4      read-only   default   active  2/1/2025
+
+If no keys: "No API keys found."
+
+### keys create
+
+Create a new API key.
+
+    jsondb keys create [--name <name>] [--scope <scope>] [--project <ns>]
+
+Flags:
+    --name <name>      Key name (default: "CLI-generated key")
+    --scope <scope>    Scope: read-only, read-write (default: "read-write")
+    --project <ns>     Target project (default: "default")
+
+NOTE: Key creation requires dashboard authentication. The CLI redirects to:
+https://jsondb.cloud/dashboard/api-keys
+
+The CLI prints an error and exits 1:
+    ERROR: Key creation requires dashboard authentication. Use the web
+    dashboard at https://jsondb.cloud/dashboard/api-keys
+
+### keys revoke
+
+Revoke an API key.
+
+    jsondb keys revoke <id>
+
+NOTE: Key revocation requires dashboard authentication. The CLI redirects to:
+https://jsondb.cloud/dashboard/api-keys
+
+The CLI prints an error and exits 1:
+    ERROR: Key revocation requires dashboard authentication. Use the web
+    dashboard at https://jsondb.cloud/dashboard/api-keys
+
+---
+
+## Error Handling
+
+### Exit codes
+
+- 0: Success
+- 1: Any error (auth, validation, API, input parsing)
+
+### Error message format
+
+TTY (interactive terminal):
+    [red] X Error: <message>
+      <suggestion if provided>
+
+Non-TTY (piped/scripted):
+    ERROR: <message>
+    <suggestion if provided>
+
+### Common error patterns
+
+Authentication missing:
+    ERROR: Not authenticated
+    Run `jsondb login` to authenticate, or pass --api-key
+
+Invalid API key format:
+    ERROR: Invalid API key format
+    API keys start with 'jdb_sk_live_' or 'jdb_sk_test_'
+
+API error response shape:
+    {
+      "error": {
+        "message": "Document not found"
+      }
+    }
+
+The CLI extracts .error.message from API responses. If parsing fails, it
+falls back to "Request failed with status {statusCode}".
+
+JSON parse errors: thrown when stdin or file input is not valid JSON.
+
+### Status message prefixes
+
+TTY mode:
+    [green checkmark] <message>     Success
+    [red X] Error: <message>        Error
+    [yellow warning] <message>      Warning
+
+Non-TTY mode:
+    OK: <message>       Success
+    ERROR: <message>    Error
+    WARN: <message>     Warning
+
+---
+
+## Output Formats
+
+### JSON output
+
+TTY (interactive):
+- Pretty-printed with 2-space indentation
+- JSON.stringify(data, null, 2)
+
+Non-TTY (piped) or --format raw:
+- Compact single-line JSON
+- JSON.stringify(data)
+
+### Table output
+
+Used by: versions list, webhooks list, keys list
+
+Format:
+- Headers in UPPERCASE
+- Columns padded to widest value
+- Separator line of dashes between header and data
+- Columns separated by two spaces
+
+### Stdout vs stderr
+
+- Success messages: stdout (console.log)
+- Error messages: stderr (console.error)
+- Document data: stdout (console.log)
+- Warnings: stdout (console.log)
+
+---
+
+## Common Workflows
+
+### Getting started
+
+    # 1. Install
+    npm install -g @jsondb-cloud/cli
+
+    # 2. Authenticate
+    jsondb login
+    # Enter API key when prompted: jdb_sk_live_...
+
+    # 3. Verify
+    jsondb whoami
+
+    # 4. Create a document
+    echo '{"name":"Alice","email":"alice@example.com"}' | jsondb create users
+
+    # 5. Read it back
+    jsondb get users/usr_abc123
+
+    # 6. List collections
+    jsondb collections
+
+### Import/export workflow
+
+    # Import from JSON
+    jsondb push ./seed-data/users.json --to users
+
+    # Import CSV, skip duplicates
+    jsondb push ./data/products.csv --to products --on-conflict skip
+
+    # Export to file
+    jsondb pull users --out backup/users.json
+
+    # Export filtered data as CSV
+    jsondb pull orders --filter status=shipped --format csv --out shipped.csv
+
+    # Export to stdout and pipe to jq
+    jsondb pull users | jq '.[].email'
+
+### Schema enforcement workflow
+
+    # 1. Define schema
+    cat > user-schema.json << 'EOF'
+    {
+      "type": "object",
+      "required": ["name", "email"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "email": { "type": "string", "format": "email" }
+      },
+      "additionalProperties": false
+    }
+    EOF
+
+    # 2. Apply schema
+    jsondb schema set users --file user-schema.json
+
+    # 3. Validate before creating (dry run)
+    echo '{"name":"Bob"}' | jsondb validate users
+    # ERROR: Validation failed (missing email)
+
+    # 4. Fix and validate
+    echo '{"name":"Bob","email":"bob@example.com"}' | jsondb validate users
+    # OK: Document is valid
+
+    # 5. Create the document
+    echo '{"name":"Bob","email":"bob@example.com"}' | jsondb create users
+
+    # 6. Check current schema
+    jsondb schema get users
+
+    # 7. Remove schema if no longer needed
+    jsondb schema remove users
+
+### Version management workflow
+
+    # List versions of a document
+    jsondb versions list users usr_abc123
+
+    # View document at a specific version
+    jsondb versions get users usr_abc123 1
+
+    # Compare versions
+    jsondb versions diff users usr_abc123 --from 1 --to 3
+
+    # Restore to a previous version
+    jsondb versions restore users usr_abc123 2
+
+### Webhook workflow
+
+    # Create a webhook for new orders
+    jsondb webhooks create orders \
+      --url https://api.example.com/hooks/orders \
+      --events document.created,document.updated \
+      --description "New order notifications" \
+      --secret whsec_my_signing_secret
+
+    # List webhooks
+    jsondb webhooks list orders
+
+    # Test the webhook
+    jsondb webhooks test orders wh_abc123
+
+    # Disable temporarily
+    jsondb webhooks update orders wh_abc123 --status disabled
+
+    # Re-enable
+    jsondb webhooks update orders wh_abc123 --status active
+
+    # Delete when no longer needed
+    jsondb webhooks delete orders wh_abc123
+
+### CI/CD pipeline usage
+
+    # Use environment variables (no interactive login)
+    export JSONDB_API_KEY=jdb_sk_live_...
+    export JSONDB_PROJECT=production
+
+    # Or use flags
+    jsondb push ./data/seed.json --to users --api-key jdb_sk_live_... --project production
+
+    # Count documents to verify import
+    jsondb count users
+
+    # Export for backup
+    jsondb pull users --out /backups/users-$(date +%Y%m%d).json
+
+### Scripting with pipes
+
+    # Create document from pipe
+    curl -s https://api.example.com/user/1 | jsondb create users
+
+    # Patch from computed JSON
+    echo '{"lastLogin":"2025-01-15T10:00:00Z"}' | jsondb patch users/usr_abc123
+
+    # Bulk operations from generated input
+    cat operations.json | jsondb bulk users
+
+    # Export and transform
+    jsondb pull users --format ndjson | while read -r line; do
+      echo "$line" | jq '{name: .name, email: .email}'
+    done
+
+---
+
+## Complete Command Reference (quick lookup)
+
+    jsondb login [--api-key] [--project] [--base-url]
+    jsondb logout
+    jsondb whoami
+
+    jsondb get <path> [--format json|raw]
+    jsondb create <collection> [--file] [--id]
+    jsondb update <path> [--file]
+    jsondb patch <path> [--file]
+    jsondb delete <path>
+
+    jsondb collections
+    jsondb documents <collection> [--limit] [--format json|raw]
+
+    jsondb push <file> --to <collection> [--on-conflict fail|skip|overwrite]
+    jsondb pull <collection> [--out] [--format json|csv|ndjson] [--filter]
+
+    jsondb schema get <collection>
+    jsondb schema set <collection> [--file]
+    jsondb schema remove <collection>
+
+    jsondb versions list <collection> <id>
+    jsondb versions get <collection> <id> <version>
+    jsondb versions diff <collection> <id> --from <n> --to <n>
+    jsondb versions restore <collection> <id> <version>
+
+    jsondb webhooks list <collection>
+    jsondb webhooks create <collection> --url <url> --events <events> [--description] [--secret]
+    jsondb webhooks get <collection> <id>
+    jsondb webhooks update <collection> <id> [--url] [--events] [--description] [--status]
+    jsondb webhooks delete <collection> <id>
+    jsondb webhooks test <collection> <id>
+
+    jsondb validate <collection> [--file]
+    jsondb count <collection> [--filter <expr...>]
+    jsondb bulk <collection> [--file]
+
+    jsondb keys list
+    jsondb keys create [--name] [--scope] [--project]  (dashboard only)
+    jsondb keys revoke <id>                            (dashboard only)
+
+---
+
+## Related Packages
+
+    @jsondb-cloud/client   JavaScript/TypeScript SDK   https://github.com/JsonDBCloud/node
+    @jsondb-cloud/mcp      MCP server for AI agents    https://github.com/JsonDBCloud/mcp
+    @jsondb-cloud/cli      CLI tool (this package)     https://github.com/JsonDBCloud/cli
+    jsondb-cloud (PyPI)    Python SDK                  https://github.com/JsonDBCloud/python
+
+Documentation: https://jsondb.cloud/docs
+Dashboard: https://jsondb.cloud/dashboard
