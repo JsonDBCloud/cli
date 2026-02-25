@@ -5,10 +5,13 @@
   "license": "MIT",
   "main": "dist/index.js",
   "bin": {
-    "jsondbcloud": "./bin/jsondb.js",
-    "jsondb": "./bin/jsondb.js"
+    "jsondbcloud": "bin/jsondb.js",
+    "jsondb": "bin/jsondb.js"
   },
-  "files": ["dist", "bin"],
+  "files": [
+    "dist",
+    "bin"
+  ],
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
@@ -21,10 +24,17 @@
     "typescript": "^5.4.0",
     "@types/node": "^20.0.0"
   },
-  "keywords": ["jsondb", "cli", "json", "database", "api", "rest"],
+  "keywords": [
+    "jsondb",
+    "cli",
+    "json",
+    "database",
+    "api",
+    "rest"
+  ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/JsonDBCloud/cli"
+    "url": "git+https://github.com/JsonDBCloud/cli.git"
   },
   "engines": {
     "node": ">=18.0.0"
