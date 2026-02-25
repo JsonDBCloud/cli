@@ -73,6 +73,11 @@ Global flags (apply to any command):
 - `jsondb webhooks delete <collection> <id>` — delete a webhook
 - `jsondb webhooks test <collection> <id>` — send a test event to a webhook
 
+### API Keys
+- `jsondb keys list` — list API keys
+- `jsondb keys create` — create a key (requires dashboard auth)
+- `jsondb keys revoke <id>` — revoke a key (requires dashboard auth)
+
 ### Utilities
 - `jsondb validate <collection>` — validate documents against the collection schema
 - `jsondb count <collection>` — count documents in a collection
