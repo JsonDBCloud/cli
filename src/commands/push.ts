@@ -40,7 +40,9 @@ export async function pushCommand(
   const result: any = await res.json();
   const summary = result.summary;
 
-  success(`Imported ${summary.total} documents (${summary.created} created, ${summary.skipped || 0} skipped, ${summary.failed || 0} failed, ${summary.overwritten || 0} overwritten)`);
+  success(
+    `Imported ${summary.total} documents (${summary.created} created, ${summary.skipped || 0} skipped, ${summary.failed || 0} failed, ${summary.overwritten || 0} overwritten)`,
+  );
 
   if (result.errors && result.errors.length > 0) {
     warn(`${result.errors.length} errors:`);

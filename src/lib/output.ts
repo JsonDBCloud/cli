@@ -35,9 +35,7 @@ export function printJson(data: unknown, raw = false): void {
 }
 
 export function printTable(headers: string[], rows: string[][]): void {
-  const widths = headers.map((h, i) =>
-    Math.max(h.length, ...rows.map((r) => (r[i] || "").length)),
-  );
+  const widths = headers.map((h, i) => Math.max(h.length, ...rows.map((r) => (r[i] || "").length)));
 
   const sep = widths.map((w) => "-".repeat(w)).join("  ");
   const header = headers.map((h, i) => h.padEnd(widths[i])).join("  ");

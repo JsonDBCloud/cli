@@ -1,15 +1,35 @@
 import { Command } from "commander";
 import { loadConfig, clearConfig } from "./lib/config";
 import { ApiClient } from "./lib/client";
-import { error, success, printJson } from "./lib/output";
+import { error, success } from "./lib/output";
 import { loginCommand } from "./commands/login";
-import { getCommand, createCommand, updateCommand, patchCommand, deleteCommand, listCollectionsCommand, listDocumentsCommand } from "./commands/documents";
+import {
+  getCommand,
+  createCommand,
+  updateCommand,
+  patchCommand,
+  deleteCommand,
+  listCollectionsCommand,
+  listDocumentsCommand,
+} from "./commands/documents";
 import { pushCommand } from "./commands/push";
 import { pullCommand } from "./commands/pull";
 import { listKeysCommand } from "./commands/keys";
 import { getSchemaCommand, setSchemaCommand, removeSchemaCommand } from "./commands/schema";
-import { listVersionsCommand, getVersionCommand, diffVersionsCommand, restoreVersionCommand } from "./commands/versions";
-import { listWebhooksCommand, createWebhookCommand, getWebhookCommand, updateWebhookCommand, deleteWebhookCommand, testWebhookCommand } from "./commands/webhooks";
+import {
+  listVersionsCommand,
+  getVersionCommand,
+  diffVersionsCommand,
+  restoreVersionCommand,
+} from "./commands/versions";
+import {
+  listWebhooksCommand,
+  createWebhookCommand,
+  getWebhookCommand,
+  updateWebhookCommand,
+  deleteWebhookCommand,
+  testWebhookCommand,
+} from "./commands/webhooks";
 import { validateCommand, countCommand, bulkCommand } from "./commands/extras";
 
 const program = new Command();
@@ -19,7 +39,7 @@ program
   .description("The jsondb.cloud CLI — manage your JSON database from the terminal")
   .version("1.0.0")
   .option("--api-key <key>", "Use a specific API key")
-  .option("--project <ns>", "Target project (default: \"default\")")
+  .option("--project <ns>", 'Target project (default: "default")')
   .option("--base-url <url>", "API base URL")
   .option("--format <fmt>", "Output format: json, raw, ndjson, table");
 
@@ -172,16 +192,20 @@ keys
   .option("--name <name>", "Key name")
   .option("--scope <scope>", "Scope: read-only, read-write", "read-write")
   .option("--project <ns>", "Target project")
-  .action(async (opts) => {
-    error("Key creation requires dashboard authentication. Use the web dashboard at https://jsondb.cloud/dashboard/api-keys");
+  .action(async (_opts) => {
+    error(
+      "Key creation requires dashboard authentication. Use the web dashboard at https://jsondb.cloud/dashboard/api-keys",
+    );
     process.exit(1);
   });
 
 keys
   .command("revoke <id>")
   .description("Revoke an API key")
-  .action(async (id) => {
-    error("Key revocation requires dashboard authentication. Use the web dashboard at https://jsondb.cloud/dashboard/api-keys");
+  .action(async (_id) => {
+    error(
+      "Key revocation requires dashboard authentication. Use the web dashboard at https://jsondb.cloud/dashboard/api-keys",
+    );
     process.exit(1);
   });
 

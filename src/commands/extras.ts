@@ -69,11 +69,7 @@ export async function countCommand(
   console.log(String(count));
 }
 
-export async function bulkCommand(
-  collection: string,
-  client: ApiClient,
-  options: { file?: string },
-): Promise<void> {
+export async function bulkCommand(collection: string, client: ApiClient, options: { file?: string }): Promise<void> {
   const body = readInput(options);
 
   if (!Array.isArray(body)) {

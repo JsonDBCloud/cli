@@ -1,11 +1,7 @@
 import { ApiClient } from "../lib/client";
 import { success, error, printJson, printTable } from "../lib/output";
 
-export async function listVersionsCommand(
-  collection: string,
-  docId: string,
-  client: ApiClient,
-): Promise<void> {
+export async function listVersionsCommand(collection: string, docId: string, client: ApiClient): Promise<void> {
   const res = await client.get(`${collection}/${docId}/versions`);
   if (!res.ok) {
     const data: any = await res.json().catch(() => ({}));
@@ -56,9 +52,7 @@ export async function diffVersionsCommand(
     error("Both --from and --to version numbers are required");
     process.exit(1);
   }
-  const res = await client.get(
-    `${collection}/${docId}/versions/diff?from=${options.from}&to=${options.to}`,
-  );
+  const res = await client.get(`${collection}/${docId}/versions/diff?from=${options.from}&to=${options.to}`);
   if (!res.ok) {
     const data: any = await res.json().catch(() => ({}));
     error(data.error?.message || `Failed to diff versions: ${res.status}`);
@@ -74,9 +68,7 @@ export async function restoreVersionCommand(
   version: string,
   client: ApiClient,
 ): Promise<void> {
-  const res = await client.post(
-    `${collection}/${docId}/versions/${version}/restore`,
-  );
+  const res = await client.post(`${collection}/${docId}/versions/${version}/restore`);
   if (!res.ok) {
     const data: any = await res.json().catch(() => ({}));
     error(data.error?.message || `Failed to restore version: ${res.status}`);

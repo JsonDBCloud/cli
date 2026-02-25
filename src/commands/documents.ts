@@ -2,11 +2,7 @@ import * as fs from "fs";
 import { ApiClient } from "../lib/client";
 import { success, error, printJson } from "../lib/output";
 
-export async function getCommand(
-  path: string,
-  client: ApiClient,
-  options: { format?: string },
-): Promise<void> {
+export async function getCommand(path: string, client: ApiClient, options: { format?: string }): Promise<void> {
   // path = "collection/docId"
   const res = await client.get(path);
   if (!res.ok) {
@@ -48,11 +44,7 @@ export async function createCommand(
   success(`Created ${doc._id} in ${collection}`);
 }
 
-export async function updateCommand(
-  path: string,
-  client: ApiClient,
-  options: { file?: string },
-): Promise<void> {
+export async function updateCommand(path: string, client: ApiClient, options: { file?: string }): Promise<void> {
   let body: unknown;
 
   if (options.file) {
@@ -76,11 +68,7 @@ export async function updateCommand(
   success(`Updated ${doc._id}`);
 }
 
-export async function patchCommand(
-  path: string,
-  client: ApiClient,
-  options: { file?: string },
-): Promise<void> {
+export async function patchCommand(path: string, client: ApiClient, options: { file?: string }): Promise<void> {
   let body: unknown;
 
   if (options.file) {
@@ -104,10 +92,7 @@ export async function patchCommand(
   success(`Patched ${doc._id}`);
 }
 
-export async function deleteCommand(
-  path: string,
-  client: ApiClient,
-): Promise<void> {
+export async function deleteCommand(path: string, client: ApiClient): Promise<void> {
   const res = await client.delete(path);
   if (!res.ok && res.status !== 204) {
     const data: any = await res.json().catch(() => ({}));
@@ -117,9 +102,7 @@ export async function deleteCommand(
   success(`Deleted ${path}`);
 }
 
-export async function listCollectionsCommand(
-  client: ApiClient,
-): Promise<void> {
+export async function listCollectionsCommand(client: ApiClient): Promise<void> {
   // List documents and extract unique collection names
   const res = await client.get("?limit=100");
   if (!res.ok) {

@@ -2,10 +2,7 @@ import * as fs from "fs";
 import { ApiClient } from "../lib/client";
 import { success, error, printJson } from "../lib/output";
 
-export async function getSchemaCommand(
-  collection: string,
-  client: ApiClient,
-): Promise<void> {
+export async function getSchemaCommand(collection: string, client: ApiClient): Promise<void> {
   const res = await client.get(`${collection}/_schema`);
   if (!res.ok) {
     if (res.status === 404) {
@@ -46,10 +43,7 @@ export async function setSchemaCommand(
   success(`Schema set for collection '${collection}'`);
 }
 
-export async function removeSchemaCommand(
-  collection: string,
-  client: ApiClient,
-): Promise<void> {
+export async function removeSchemaCommand(collection: string, client: ApiClient): Promise<void> {
   const res = await client.delete(`${collection}/_schema`);
   if (!res.ok) {
     error(`Failed to remove schema: ${res.status}`);

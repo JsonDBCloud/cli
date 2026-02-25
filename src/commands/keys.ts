@@ -32,7 +32,7 @@ export async function createKeyCommand(
   client: ApiClient,
   options: { name?: string; scope?: string; project?: string },
 ): Promise<void> {
-  const res = await client.rawGet("/api/keys"); // POST via the dashboard API
+  await client.rawGet("/api/keys"); // POST via the dashboard API
   // Actually we need to post to create. Use a different approach
   const body = {
     name: options.name || "CLI-generated key",
@@ -62,10 +62,7 @@ export async function createKeyCommand(
   }
 }
 
-export async function revokeKeyCommand(
-  keyId: string,
-  client: ApiClient,
-): Promise<void> {
+export async function revokeKeyCommand(keyId: string, client: ApiClient): Promise<void> {
   const res = await client.rawGet(`/api/keys/${keyId}`);
   if (!res.ok) {
     error("Key revocation requires dashboard authentication. Use the web dashboard.");

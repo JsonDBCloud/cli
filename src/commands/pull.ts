@@ -34,7 +34,7 @@ export async function pullCommand(
   if (options.out) {
     fs.writeFileSync(options.out, content, "utf-8");
     // Count documents
-    let count = 0;
+    let count;
     if (format === "json") {
       try {
         count = JSON.parse(content).length;

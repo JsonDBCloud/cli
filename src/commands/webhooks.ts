@@ -1,10 +1,7 @@
 import { ApiClient } from "../lib/client";
 import { success, error, printJson, printTable } from "../lib/output";
 
-export async function listWebhooksCommand(
-  collection: string,
-  client: ApiClient,
-): Promise<void> {
+export async function listWebhooksCommand(collection: string, client: ApiClient): Promise<void> {
   const res = await client.get(`${collection}/_webhooks`);
   if (!res.ok) {
     const data: any = await res.json().catch(() => ({}));
@@ -50,11 +47,7 @@ export async function createWebhookCommand(
   printJson(webhook);
 }
 
-export async function getWebhookCommand(
-  collection: string,
-  webhookId: string,
-  client: ApiClient,
-): Promise<void> {
+export async function getWebhookCommand(collection: string, webhookId: string, client: ApiClient): Promise<void> {
   const res = await client.get(`${collection}/_webhooks/${webhookId}`);
   if (!res.ok) {
     const data: any = await res.json().catch(() => ({}));
@@ -93,11 +86,7 @@ export async function updateWebhookCommand(
   printJson(webhook);
 }
 
-export async function deleteWebhookCommand(
-  collection: string,
-  webhookId: string,
-  client: ApiClient,
-): Promise<void> {
+export async function deleteWebhookCommand(collection: string, webhookId: string, client: ApiClient): Promise<void> {
   const res = await client.delete(`${collection}/_webhooks/${webhookId}`);
   if (!res.ok && res.status !== 204) {
     const data: any = await res.json().catch(() => ({}));
@@ -107,11 +96,7 @@ export async function deleteWebhookCommand(
   success(`Deleted webhook ${webhookId}`);
 }
 
-export async function testWebhookCommand(
-  collection: string,
-  webhookId: string,
-  client: ApiClient,
-): Promise<void> {
+export async function testWebhookCommand(collection: string, webhookId: string, client: ApiClient): Promise<void> {
   const res = await client.post(`${collection}/_webhooks/${webhookId}/test`);
   if (!res.ok) {
     const data: any = await res.json().catch(() => ({}));
