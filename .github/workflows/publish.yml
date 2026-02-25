@@ -4,9 +4,6 @@ on:
   push:
     branches: [main]
 
-env:
-  VERSION: "1.0.${{ github.run_number }}"
-
 jobs:
   npm:
     name: Publish to npm
@@ -31,10 +28,7 @@ jobs:
 
       - run: npm run build
 
-      - name: Publish
-        run: npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - run: npm publish --provenance --access public
 
   binaries:
     name: Build ${{ matrix.target }} binary
@@ -170,6 +164,8 @@ jobs:
           EOF
 
       - name: Push formula update
+        env:
+          VER: 1.0.${{ github.run_number }}
         run: |
           cd tap
           git config user.name "github-actions[bot]"
@@ -177,5 +173,3 @@ jobs:
           git add Formula/jsondb.rb
           git commit -m "Update jsondb to ${VER}"
           git push
-        env:
-          VER: 1.0.${{ github.run_number }}
