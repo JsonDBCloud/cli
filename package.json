@@ -23,7 +23,7 @@
   "keywords": ["jsondb", "cli", "json", "database", "api", "rest"],
   "repository": {
     "type": "git",
-    "url": "https://github.com/jsondb-cloud/cli"
+    "url": "https://github.com/JsonDBCloud/cli"
   },
   "engines": {
     "node": ">=18.0.0"
