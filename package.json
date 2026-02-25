@@ -21,6 +21,7 @@
     "format": "prettier --write 'src/**/*.ts'",
     "format:check": "prettier --check 'src/**/*.ts'",
     "test": "vitest run",
+    "test:e2e": "vitest run --config vitest.e2e.config.ts",
     "prepare": "husky"
   },
   "dependencies": {
@@ -30,6 +31,7 @@
     "@eslint/js": "^10.0.1",
     "@types/node": "^20.0.0",
     "eslint": "^10.0.2",
+    "execa": "^9.6.1",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.7",
     "prettier": "^3.8.1",
