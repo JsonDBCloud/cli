@@ -76,14 +76,9 @@ describe("deleteCommand", () => {
 });
 
 describe("listCollectionsCommand", () => {
-  it("extracts unique sorted collection names from response", async () => {
+  it("lists sorted collection names from response", async () => {
     const data = {
-      data: [
-        { $collection: "users", _id: "1" },
-        { $collection: "posts", _id: "2" },
-        { $collection: "users", _id: "3" },
-        { $collection: "animals", _id: "4" },
-      ],
+      data: ["users", "posts", "animals"],
     };
     mockFetch.mockResolvedValue(mockResponse(data));
 

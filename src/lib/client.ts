@@ -16,6 +16,7 @@ export class ApiClient {
 
   private url(path: string): string {
     const base = this.config.baseUrl.replace(/\/$/, "");
+    if (!path) return `${base}/${this.config.project}`;
     return `${base}/${this.config.project}/${path}`;
   }
 

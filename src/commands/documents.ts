@@ -103,20 +103,19 @@ export async function deleteCommand(path: string, client: ApiClient): Promise<vo
 }
 
 export async function listCollectionsCommand(client: ApiClient): Promise<void> {
-  // List documents and extract unique collection names
-  const res = await client.get("?limit=100");
+  const res = await client.get("");
   if (!res.ok) {
     const data: any = await res.json().catch(() => ({}));
     error(data.error?.message || `Failed to list collections: ${res.status}`);
     process.exit(1);
   }
   const data: any = await res.json();
-  const collections = new Set<string>();
-  for (const doc of data.data || []) {
-    if (doc.$collection) collections.add(doc.$collection);
-  }
-  for (const coll of Array.from(collections).sort()) {
-    console.log(coll);
+  const collections: string[] = data.data ?? data;
+
+  if (Array.isArray(collections)) {
+    for (const coll of collections.sort()) {
+      console.log(coll);
+    }
   }
 }
 
