@@ -1,11 +1,15 @@
-name: Publish to npm
+name: Publish CLI
 
 on:
   push:
     branches: [main]
 
+env:
+  VERSION: "1.0.${{ github.run_number }}"
+
 jobs:
-  publish:
+  npm:
+    name: Publish to npm
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -18,18 +22,160 @@ jobs:
           node-version: 20
           registry-url: https://registry.npmjs.org
 
-      - name: Install dependencies
-        run: npm ci
+      - run: npm ci
 
-      - name: Set version 1.0.{build}
+      - name: Set version
         env:
           BUILD_NUMBER: ${{ github.run_number }}
         run: npm version "1.0.${BUILD_NUMBER}" --no-git-tag-version
 
-      - name: Build
-        run: npm run build
+      - run: npm run build
 
       - name: Publish
         run: npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  binaries:
+    name: Build ${{ matrix.target }} binary
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - target: darwin-arm64
+            os: macos-14
+            bun_target: bun-darwin-arm64
+          - target: darwin-x64
+            os: macos-13
+            bun_target: bun-darwin-x64
+          - target: linux-x64
+            os: ubuntu-latest
+            bun_target: bun-linux-x64
+          - target: linux-arm64
+            os: ubuntu-latest
+            bun_target: bun-linux-arm64
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+
+      - run: bun install
+
+      - name: Compile binary
+        env:
+          BUN_TARGET: ${{ matrix.bun_target }}
+        run: bun build src/index.ts --compile --target="${BUN_TARGET}" --outfile=jsondb
+
+      - name: Package
+        env:
+          TARGET: ${{ matrix.target }}
+        run: tar -czf "jsondb-${TARGET}.tar.gz" jsondb
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: jsondb-${{ matrix.target }}
+          path: jsondb-${{ matrix.target }}.tar.gz
+
+  release:
+    name: Create GitHub Release
+    needs: binaries
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: v1.0.${{ github.run_number }}
+        run: |
+          gh release create "${TAG}" \
+            --repo "${{ github.repository }}" \
+            --title "${TAG}" \
+            --notes "Automated release ${TAG}" \
+            jsondb-darwin-arm64.tar.gz \
+            jsondb-darwin-x64.tar.gz \
+            jsondb-linux-x64.tar.gz \
+            jsondb-linux-arm64.tar.gz
+
+  update-tap:
+    name: Update Homebrew tap
+    needs: release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+
+      - name: Compute SHA256 sums
+        id: shas
+        run: |
+          echo "darwin_arm64=$(sha256sum jsondb-darwin-arm64.tar.gz | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+          echo "darwin_x64=$(sha256sum jsondb-darwin-x64.tar.gz | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+          echo "linux_arm64=$(sha256sum jsondb-linux-arm64.tar.gz | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+          echo "linux_x64=$(sha256sum jsondb-linux-x64.tar.gz | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v4
+        with:
+          repository: JsonDBCloud/homebrew-tap
+          token: ${{ secrets.TAP_GITHUB_TOKEN }}
+          path: tap
+
+      - name: Update formula
+        env:
+          VER: 1.0.${{ github.run_number }}
+          SHA_DARWIN_ARM64: ${{ steps.shas.outputs.darwin_arm64 }}
+          SHA_DARWIN_X64: ${{ steps.shas.outputs.darwin_x64 }}
+          SHA_LINUX_ARM64: ${{ steps.shas.outputs.linux_arm64 }}
+          SHA_LINUX_X64: ${{ steps.shas.outputs.linux_x64 }}
+        run: |
+          cat > tap/Formula/jsondb.rb << EOF
+          class Jsondb < Formula
+            desc "CLI tool for jsondb.cloud — manage your JSON database from the terminal"
+            homepage "https://github.com/JsonDBCloud/cli"
+            version "${VER}"
+            license "MIT"
+
+            on_macos do
+              if Hardware::CPU.arm?
+                url "https://github.com/JsonDBCloud/cli/releases/download/v${VER}/jsondb-darwin-arm64.tar.gz"
+                sha256 "${SHA_DARWIN_ARM64}"
+              else
+                url "https://github.com/JsonDBCloud/cli/releases/download/v${VER}/jsondb-darwin-x64.tar.gz"
+                sha256 "${SHA_DARWIN_X64}"
+              end
+            end
+
+            on_linux do
+              if Hardware::CPU.arm?
+                url "https://github.com/JsonDBCloud/cli/releases/download/v${VER}/jsondb-linux-arm64.tar.gz"
+                sha256 "${SHA_LINUX_ARM64}"
+              else
+                url "https://github.com/JsonDBCloud/cli/releases/download/v${VER}/jsondb-linux-x64.tar.gz"
+                sha256 "${SHA_LINUX_X64}"
+              end
+            end
+
+            def install
+              bin.install "jsondb"
+            end
+
+            test do
+              assert_match "jsondb", shell_output("#{bin}/jsondb --version")
+            end
+          end
+          EOF
+
+      - name: Push formula update
+        run: |
+          cd tap
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Formula/jsondb.rb
+          git commit -m "Update jsondb to ${VER}"
+          git push
+        env:
+          VER: 1.0.${{ github.run_number }}
