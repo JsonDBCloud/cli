@@ -35,6 +35,14 @@ jobs:
       - name: Test
         run: npm test
 
+      - name: Publish unit test report
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Unit Test Results
+          path: test-results.xml
+          reporter: java-junit
+
   e2e:
     name: E2E Tests
     runs-on: ubuntu-latest
@@ -55,3 +63,11 @@ jobs:
         env:
           JSONDB_E2E_API_KEY: ${{ secrets.E2E_API_KEY }}
         run: npm run test:e2e
+
+      - name: Publish E2E test report
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: E2E Test Results
+          path: e2e-results.xml
+          reporter: java-junit

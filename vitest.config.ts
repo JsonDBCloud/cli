@@ -4,5 +4,7 @@ export default defineConfig({
   test: {
     include: ["src/**/*.test.ts"],
     globals: true,
+    reporters: ["verbose", "junit"],
+    outputFile: { junit: "test-results.xml" },
   },
 });
