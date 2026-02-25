@@ -20,7 +20,8 @@
     "lint:fix": "eslint src/ --fix",
     "format": "prettier --write 'src/**/*.ts'",
     "format:check": "prettier --check 'src/**/*.ts'",
-    "test": "vitest run"
+    "test": "vitest run",
+    "prepare": "husky"
   },
   "dependencies": {
     "commander": "^13.0.0"
@@ -29,6 +30,8 @@
     "@eslint/js": "^10.0.1",
     "@types/node": "^20.0.0",
     "eslint": "^10.0.2",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
     "prettier": "^3.8.1",
     "typescript": "^5.4.0",
     "typescript-eslint": "^8.56.1",
@@ -48,5 +51,11 @@
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "lint-staged": {
+    "src/**/*.ts": [
+      "prettier --write",
+      "eslint --fix"
+    ]
   }
 }
