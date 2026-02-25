@@ -90,7 +90,7 @@ jobs:
           gh release create "${TAG}" \
             --repo "${{ github.repository }}" \
             --title "${TAG}" \
-            --notes "Automated release ${TAG}" \
+            --generate-notes \
             jsondb-darwin-arm64.tar.gz \
             jsondb-darwin-x64.tar.gz \
             jsondb-linux-x64.tar.gz \
