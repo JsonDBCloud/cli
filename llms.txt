@@ -1,0 +1,99 @@
+# @jsondb-cloud/cli
+
+> CLI for jsondb.cloud — manage a hosted JSON document database from the terminal.
+
+## Overview
+
+jsondb.cloud is a hosted JSON document database with a REST API. The `jsondb` CLI lets you authenticate, push/pull data, manage collections, schemas, versions, and webhooks directly from the terminal. It wraps the jsondb.cloud API into simple commands.
+
+## Installation
+
+- npm: `npm install -g @jsondb-cloud/cli`
+- Homebrew: `brew install jsondbcloud/tap/jsondb`
+- Standalone binaries: download from https://github.com/JsonDBCloud/cli/releases (macOS arm64/x64, Linux x64/arm64)
+
+## Authentication
+
+- `jsondb login` — prompts for API key (keys start with `jdb_sk_`)
+- Credentials stored at `~/.config/jsondb/credentials.json`
+- `jsondb logout` — removes stored credentials
+- `jsondb whoami` — shows current authenticated user
+
+## Configuration
+
+Environment variables:
+- `JSONDB_API_KEY` — API key (overrides stored credentials)
+- `JSONDB_PROJECT` — default project namespace
+- `JSONDB_BASE_URL` — API base URL (for self-hosted or staging)
+
+Global flags (apply to any command):
+- `--api-key <key>` — API key for this request
+- `--project <ns>` — project namespace
+- `--base-url <url>` — API base URL
+- `--format <fmt>` — output format: json, raw, ndjson, table
+
+## Commands
+
+### Auth
+- `jsondb login` — authenticate with API key
+- `jsondb logout` — remove stored credentials
+- `jsondb whoami` — show current user
+
+### Documents
+- `jsondb get <path>` — retrieve a document by path
+- `jsondb create <collection>` — create a new document (reads JSON from stdin or flags)
+- `jsondb update <path>` — replace a document at the given path
+- `jsondb patch <path>` — partially update a document
+- `jsondb delete <path>` — delete a document
+
+### Collections
+- `jsondb collections` — list all collections
+- `jsondb documents <collection>` — list documents in a collection
+
+### Import/Export
+- `jsondb push <file> --to <collection>` — import a local JSON file into a collection
+- `jsondb pull <collection>` — export a collection to a local file
+
+### Schema
+- `jsondb schema get <collection>` — retrieve the schema for a collection
+- `jsondb schema set <collection>` — set or update a collection schema
+- `jsondb schema remove <collection>` — remove the schema from a collection
+
+### Versions
+- `jsondb versions list <collection> <id>` — list version history for a document
+- `jsondb versions get <collection> <id> <version>` — retrieve a specific version
+- `jsondb versions diff <collection> <id>` — show diff between versions
+- `jsondb versions restore <collection> <id> <version>` — restore to a previous version
+
+### Webhooks
+- `jsondb webhooks list <collection>` — list webhooks for a collection
+- `jsondb webhooks create <collection>` — create a new webhook
+- `jsondb webhooks get <collection> <id>` — get webhook details
+- `jsondb webhooks update <collection> <id>` — update a webhook
+- `jsondb webhooks delete <collection> <id>` — delete a webhook
+- `jsondb webhooks test <collection> <id>` — send a test event to a webhook
+
+### Utilities
+- `jsondb validate <collection>` — validate documents against the collection schema
+- `jsondb count <collection>` — count documents in a collection
+- `jsondb bulk <collection>` — perform bulk operations on a collection
+
+## Quick Example
+
+```bash
+jsondb login
+jsondb collections
+jsondb push ./data/users.json --to users
+jsondb get users/usr_abc123
+jsondb pull users --out users.json
+```
+
+## More Information
+
+For complete documentation with all parameters, examples, and response formats, see llms-full.txt.
+
+- Docs: https://jsondb.cloud/docs
+- Related packages:
+  - `@jsondb-cloud/client` — JavaScript/TypeScript SDK
+  - `@jsondb-cloud/mcp` — MCP server for AI agents
+  - `jsondb-cloud` (PyPI) — Python SDK
