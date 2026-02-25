@@ -34,21 +34,23 @@ Available platforms: macOS (arm64, x64), Linux (x64, arm64).
 
 ## Quick Start
 
+Get your API key from [jsondb.cloud/dashboard/api-keys](https://jsondb.cloud/dashboard/api-keys), then:
+
 ```bash
-# Authenticate
+# Authenticate (paste your API key when prompted)
 jsondb login
 
-# List collections
-jsondb collections
+# Create a document
+echo '{"name": "Alice", "email": "alice@example.com"}' | jsondb create users
+# ✓ Created usr_abc123 in users
 
-# Push local data
-jsondb push ./data/users.json --to users
-
-# Get a document
+# Read it back
 jsondb get users/usr_abc123
+# {"_id": "usr_abc123", "name": "Alice", "email": "alice@example.com", ...}
 
-# Pull collection to file
-jsondb pull users --out users.json
+# Delete it
+jsondb delete users/usr_abc123
+# ✓ Deleted users/usr_abc123
 ```
 
 ## Configuration
@@ -75,6 +77,7 @@ Credentials are stored at `~/.config/jsondb/credentials.json`.
 | `--project <ns>` | Project namespace |
 | `--base-url <url>` | API base URL |
 | `--format <fmt>` | Output format: `json`, `raw`, `ndjson`, `table` |
+| `--verbose` | Show debug info (request URLs, status codes) |
 
 ## Commands
 
