@@ -1,5 +1,5 @@
 {
-  "name": "@jsondb-cloud/cli",
+  "name": "jsondbcloud",
   "version": "1.0.0",
   "description": "CLI tool for jsondb.cloud — push, pull, manage your JSON database from the terminal",
   "license": "MIT",
