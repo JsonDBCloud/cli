@@ -1,10 +1,11 @@
 {
-  "name": "jsondbcloud",
+  "name": "@jsondb-cloud/cli",
   "version": "1.0.0",
   "description": "CLI tool for jsondb.cloud — push, pull, manage your JSON database from the terminal",
   "license": "MIT",
   "main": "dist/index.js",
   "bin": {
+    "jsondbcloud": "./bin/jsondb.js",
     "jsondb": "./bin/jsondb.js"
   },
   "files": ["dist", "bin"],
