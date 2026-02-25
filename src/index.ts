@@ -40,7 +40,7 @@ program
   .description("The jsondb.cloud CLI — manage your JSON database from the terminal")
   .version(pkgVersion)
   .option("--api-key <key>", "Use a specific API key")
-  .option("--project <ns>", 'Target project (default: "default")')
+  .option("--project <ns>", 'Target project (default: "v1")')
   .option("--base-url <url>", "API base URL")
   .option("--format <fmt>", "Output format: json, raw, ndjson, table")
   .option("--verbose", "Show debug info (request URLs, status codes)");
@@ -57,7 +57,7 @@ function getClient(): ApiClient {
 
   const client = new ApiClient({
     apiKey,
-    project: opts.project || config?.project || "default",
+    project: opts.project || config?.project || "v1",
     baseUrl: opts.baseUrl || config?.baseUrl || "https://api.jsondb.cloud",
   });
   if (opts.verbose) client.verbose = true;

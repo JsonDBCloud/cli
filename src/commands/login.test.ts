@@ -30,10 +30,10 @@ describe("loginCommand", () => {
 
     expect(saveConfig).toHaveBeenCalledWith({
       apiKey: "jdb_sk_test_abc123",
-      project: "default",
+      project: "v1",
       baseUrl: "https://api.jsondb.cloud",
     });
-    expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("Project: default"));
+    expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("Project: v1"));
     expect(logSpy).toHaveBeenCalledWith(expect.stringContaining(getConfigPath()));
   });
 

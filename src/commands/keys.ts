@@ -38,7 +38,7 @@ export async function createKeyCommand(
   const body = {
     name: options.name || "CLI-generated key",
     scope: options.scope || "read-write",
-    project: options.project || "default",
+    project: options.project || "v1",
   };
 
   // This goes through the dashboard API

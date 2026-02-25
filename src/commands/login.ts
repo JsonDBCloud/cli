@@ -22,7 +22,7 @@ export async function loginCommand(options: { apiKey?: string; project?: string;
 
   const config = {
     apiKey,
-    project: options.project || "default",
+    project: options.project || "v1",
     baseUrl: options.baseUrl || "https://api.jsondb.cloud",
   };
 
