@@ -106,7 +106,8 @@ export async function listCollectionsCommand(client: ApiClient): Promise<void> {
   // List documents and extract unique collection names
   const res = await client.get("?limit=100");
   if (!res.ok) {
-    error("Failed to list collections");
+    const data: any = await res.json().catch(() => ({}));
+    error(data.error?.message || `Failed to list collections: ${res.status}`);
     process.exit(1);
   }
   const data: any = await res.json();
@@ -127,7 +128,8 @@ export async function listDocumentsCommand(
   const limit = options.limit || "20";
   const res = await client.get(`${collection}?limit=${limit}`);
   if (!res.ok) {
-    error("Failed to list documents");
+    const data: any = await res.json().catch(() => ({}));
+    error(data.error?.message || `Failed to list documents: ${res.status}`);
     process.exit(1);
   }
   const data = await res.json();

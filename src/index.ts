@@ -41,7 +41,8 @@ program
   .option("--api-key <key>", "Use a specific API key")
   .option("--project <ns>", 'Target project (default: "default")')
   .option("--base-url <url>", "API base URL")
-  .option("--format <fmt>", "Output format: json, raw, ndjson, table");
+  .option("--format <fmt>", "Output format: json, raw, ndjson, table")
+  .option("--verbose", "Show debug info (request URLs, status codes)");
 
 function getClient(): ApiClient {
   const opts = program.opts();
@@ -53,11 +54,13 @@ function getClient(): ApiClient {
     process.exit(1);
   }
 
-  return new ApiClient({
+  const client = new ApiClient({
     apiKey,
     project: opts.project || config?.project || "default",
     baseUrl: opts.baseUrl || config?.baseUrl || "https://api.jsondb.cloud",
   });
+  if (opts.verbose) client.verbose = true;
+  return client;
 }
 
 // ─── Auth commands ───

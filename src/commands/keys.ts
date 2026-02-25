@@ -4,7 +4,8 @@ import { success, error, warn, printTable } from "../lib/output";
 export async function listKeysCommand(client: ApiClient): Promise<void> {
   const res = await client.rawGet("/api/keys");
   if (!res.ok) {
-    error("Failed to list API keys");
+    const errData: any = await res.json().catch(() => ({}));
+    error(errData.error?.message || `Failed to list API keys: ${res.status}`);
     process.exit(1);
   }
   const data: any = await res.json();
