@@ -5,8 +5,12 @@ The official CLI tool for [jsondb.cloud](https://jsondb.cloud) — a hosted JSON
 [![npm version](https://img.shields.io/npm/v/@jsondb-cloud/cli)](https://www.npmjs.com/package/@jsondb-cloud/cli)
 [![npm downloads](https://img.shields.io/npm/dm/@jsondb-cloud/cli)](https://www.npmjs.com/package/@jsondb-cloud/cli)
 [![CI](https://github.com/JsonDBCloud/cli/actions/workflows/ci.yml/badge.svg)](https://github.com/JsonDBCloud/cli/actions)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D18-brightgreen)](https://nodejs.org)
+[![Bundle size](https://img.shields.io/bundlephobia/min/@jsondb-cloud/cli)](https://bundlephobia.com/package/@jsondb-cloud/cli)
+[![GitHub stars](https://img.shields.io/github/stars/JsonDBCloud/cli)](https://github.com/JsonDBCloud/cli)
+[![Last commit](https://img.shields.io/github/last-commit/JsonDBCloud/cli)](https://github.com/JsonDBCloud/cli)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
 ## Install
 
