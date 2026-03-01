@@ -1163,12 +1163,15 @@ Format:
 
 ---
 
+## Links
+
+- Docs: https://jsondb.cloud/docs/cli
+- npm: https://www.npmjs.com/package/@jsondb-cloud/cli
+- GitHub: https://github.com/JsonDBCloud/cli
+- Dashboard: https://jsondb.cloud/dashboard
+
 ## Related Packages
 
-    @jsondb-cloud/client   JavaScript/TypeScript SDK   https://github.com/JsonDBCloud/node
-    @jsondb-cloud/mcp      MCP server for AI agents    https://github.com/JsonDBCloud/mcp
-    @jsondb-cloud/cli      CLI tool (this package)     https://github.com/JsonDBCloud/cli
-    jsondb-cloud (PyPI)    Python SDK                  https://github.com/JsonDBCloud/python
-
-Documentation: https://jsondb.cloud/docs
-Dashboard: https://jsondb.cloud/dashboard
+- `@jsondb-cloud/client` — JavaScript/TypeScript SDK — https://www.npmjs.com/package/@jsondb-cloud/client
+- `@jsondb-cloud/mcp` — MCP server for AI agents — https://www.npmjs.com/package/@jsondb-cloud/mcp
+- `jsondb-cloud` (PyPI) — Python SDK — https://pypi.org/project/jsondb-cloud/
